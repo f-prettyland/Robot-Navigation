@@ -11,18 +11,26 @@ import geometry.IntPoint;
 public class UI {
 
 	private final EasyGui gui;
+	private  Robot r;
 	private final RRTree tree;
 
-	private final int fextFieldId;
-	private final int NO_OF_SENSORS = 8;
+	private final int noOfSensorsID;
+	private final int xCoordID;
+	private final int yCoordID;
+	private final int nO_OF_SAMPLES = 8;
+	private final int xCOORD = 100;
+	private final int yCOORD = 100;
 
 	public UI()
 	{
 		gui = new EasyGui(500, 500);
 
-		fextFieldId = gui.addTextField(0, 0, "No of sensors");
+		noOfSensorsID = gui.addTextField(0, 0, "No of sensors");
+		xCoordID = gui.addTextField(0, 1, "xStart");
+		yCoordID = gui.addTextField(0, 2, "yStart");
 
-		gui.addButton(0, 1, "ButtonA", this, "buttonActionA");
+		gui.addButton(1, 1, "ButtonA", this, "buttonActionA");
+		gui.addButton(1, 0, "Make Robot", this, "makeRobot");
 
 
 		tree = new RRTree(Color.BLACK);
@@ -35,60 +43,38 @@ public class UI {
 		// Displays the GUI i.e. makes it visible.
 		gui.show();
 	}
+	
+	public void makeRobot()
+	{
+
+		int sens = getField(noOfSensorsID,nO_OF_SAMPLES);
+		int x = getField(yCoordID,yCOORD);
+		int y = getField(xCoordID,xCOORD);
+
+		r = new Robot(x, y, gui, sens, 5, 5, true);
+	}
 
 	public void buttonActionA()
 	{
-		// This method is called when the button labeled "ButtonB" is pressed.
-		System.out.println("You pressed button A");
+		// Now also call the "treeExample" method to draw an example tree.
+		fieldPotential();
+	}
 
-		String textFieldString = gui.getTextFieldContent(fextFieldId);
-		int i = NO_OF_SENSORS;
+	private int getField(int iD, int defaultValue) {
+		String textFieldString = gui.getTextFieldContent(iD);
+		int i = defaultValue;
 		try{
 			i = Integer.parseInt(textFieldString);
 		}catch(NumberFormatException e){
-			System.out.println("Not a number, going with default value of "+ NO_OF_SENSORS);
+			System.out.println("Not a number, going with default value of "+ i);
 		}
 		System.out.println(i);
-
-		// Now also call the "treeExample" method to draw an example tree.
-		//fieldPotential();
+		return i;
 	}
 
 	public void fieldPotential()
 	{
-		// Please note that the coordinates in the example below are arbitrary.
-
-		// Set the start position to (100, 100) and the goal position to (300, 300).
-		// The goal radius is 40. A path that ends in the circle of this radius around
-		// the goal is considered to have attained the goal position.
-		tree.setStartAndGoal(new IntPoint(100, 100), new IntPoint(400, 300), 40);
-
-		// Returns the nearest node to the point (200, 300). Currently the start position is
-		// the only node in the tree, so it will be returned no matter what coordinates you
-		// choose. Once you have added nodes the coordinates are important.
-		RRNode nearest = tree.getNearestNeighbour(new IntPoint(200, 300));
-
-		// Adds a new node representing the point (150, 200) to the tree.
-		// The parent node is the nearest node obtained using the getNearestNeighbour method.
-		tree.addNode(nearest, new IntPoint(150, 200));
-
-		// Draws a thick red point at location (200, 300).
-		RenderablePoint point = new RenderablePoint(200, 300);
-		point.setProperties(Color.RED, 10.0f);
-		gui.draw(point);
-
-		// This prints the path from the start position to the position of the given node.
-		// In this example we only have a reference to the "nearest" node we got above.
-		// Since this happens to be the root node (representing the start position) only the
-		// start position is printed.
-		ArrayList<IntPoint> path = tree.getPathFromRootTo(nearest);
-		System.out.println("Path:");
-		for(IntPoint p : path)
-			System.out.println(p);
-
-		// Call the update method to refresh the GUI. Otherwise the newly added node will
-		// not be displayed. You only need to call this method once, no matter how many nodes
-		// were added.
+		r.go();
 		gui.update();
 	}
 
