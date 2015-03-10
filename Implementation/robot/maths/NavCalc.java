@@ -16,16 +16,6 @@ public  class NavCalc {
 	public static Point2D toCartesian (double magnitude, double angle){
 		//covert to radians
 		double rAngle = angle*(Math.PI/180);
-		if(angle < 0){
-			//TODO REMOVE
-			System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHH");
-			System.exit(1);
-		} else if(angle >360){
-			//TODO REMOVE
-			System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHH");
-			System.exit(1);
-		}
-		
 		
 		double x=magnitude*Math.sin(rAngle);
 		double y=magnitude*Math.cos(rAngle);
