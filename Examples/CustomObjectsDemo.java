@@ -7,12 +7,12 @@ import java.io.File;
 public class CustomObjectsDemo
 {
 	private final EasyGui gui;
-	
+
 	public CustomObjectsDemo()
 	{
 		// Create a new EasyGui instance with a 500x500pixel graphics panel.
 		gui = new EasyGui(500, 500);
-		
+
 		// Adding a RenderablePoint
 		RenderablePoint p = new RenderablePoint(55, 55);
 		p.setProperties(Color.RED, 30.0f);
@@ -55,19 +55,19 @@ public class CustomObjectsDemo
 		// This will look for the image called "MyImage.jpg" in the folder "images" which should be in the Eclipse
 		// project folder at the same level as the "src" and "bin" folders. Remember to submit the "images" folder along
 		// with your JAR file. If you don't the images can not be found and will not be displayed.
-		RenderableImg rImg = new RenderableImg("images" + File.separator + "MyImage.jpg", 0, 0, 40, 40);
-		gui.draw(rImg);
+		//RenderableImg rImg = new RenderableImg("images" + File.separator + "MyImage.jpg", 0, 0, 40, 40);
+		//gui.draw(rImg);
 
 		// Now update
 		gui.update();
 	}
-	
+
 	public void runDemo()
 	{
 		// Displays the GUI i.e. makes it visible.
 		gui.show();
 	}
-	
+
 	// MAIN
 	public static void main(String[] args)
 	{
