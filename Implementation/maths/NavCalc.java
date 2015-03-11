@@ -1,5 +1,6 @@
-package robot.maths;
+package maths;
 
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
@@ -39,28 +40,16 @@ public  class NavCalc {
 		return base;
 	}
 	
-	public static Point2D findLine (Point2D point, Point2D point2){
-		//gradient of the line
-		double m = (point.getY() - point2.getY())/(point.getX() - point2.getX());
-		//y intersect
-		double b = point.getY() - (m*point.getX());
-		
-		return new Point2D.Double(m,b);
+	//TODO DEL
+	public static Line2D findLine (Point2D point, Point2D point2){		
+		return new Line2D.Double(point, point2);
 	}
 	
-	public static boolean pointWithin (Point2D point, Renderable shape){
-		return true;
+	public static double attractionAt (Point2D point, RenderablePoint from){
+		return 0;
 	}
 	
-	public static Point2D closestCrossing (Point2D loc, Renderable shape, Point2D lineEqn){
-		return null;
-	}
-	
-	public static boolean attractionAt (Point2D point, Point2D from){
-		return true;
-	}
-	
-	public static boolean repulsionAt (Point2D point, ArrayList<Point2D> from){
-		return true;
+	public static double repulsionAt (Point2D point, ArrayList<Point2D> from){
+		return 0;
 	}
 }

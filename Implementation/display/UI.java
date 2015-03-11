@@ -1,8 +1,11 @@
-package robot;
+package display;
 
 import java.awt.Color;
 import java.util.ArrayList;
+
+import renderables.Renderable;
 import renderables.RenderablePoint;
+import robot.Robot;
 import dataStructures.RRNode;
 import dataStructures.RRTree;
 import easyGui.EasyGui;
@@ -10,21 +13,23 @@ import geometry.IntPoint;
 
 public class UI {
 
-	private final EasyGui gui;
+	public final EasyGui gui;
 	private  Robot r;
+	public  ArrayList<Renderable> map;
+	public RenderablePoint goal;
 	private final RRTree tree;
 
 	private final int noOfSensorsID;
 	private final int xCoordID;
 	private final int yCoordID;
-	private final int nO_OF_SAMPLES = 8;
+	private final int nO_OF_SAMPLES = 7;
 	private final int xCOORD = 100;
 	private final int yCOORD = 100;
 
 	public UI()
 	{
 		gui = new EasyGui(500, 500);
-
+		map= new ArrayList<Renderable>();
 		noOfSensorsID = gui.addTextField(0, 0, "No of sensors");
 		xCoordID = gui.addTextField(0, 1, "xStart");
 		yCoordID = gui.addTextField(0, 2, "yStart");
@@ -46,12 +51,12 @@ public class UI {
 	
 	public void makeRobot()
 	{
-
+		gui.clearGraphicsPanel();
 		int sens = getField(noOfSensorsID,nO_OF_SAMPLES);
 		int x = getField(yCoordID,yCOORD);
 		int y = getField(xCoordID,xCOORD);
 
-		r = new Robot(x, y, gui, sens, 5, 5, true);
+		r = new Robot(x, y, this, sens, 20,5, 10, true);
 	}
 
 	public void buttonActionA()
