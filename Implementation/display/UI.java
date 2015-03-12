@@ -2,21 +2,22 @@ package display;
 
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.Random;
 
+import maths.NavCalc;
 import renderables.*;
-import robot.Robot;
-import dataStructures.RRNode;
-import dataStructures.RRTree;
+import robot.FieldRobot;
+import robot.IRobot;
+import robot.RRTRobot;
 import easyGui.EasyGui;
 
 public class UI {
 
 	public final EasyGui gui;
-	private  Robot r;
+	private  IRobot r;
+	private  IRobot rr;
 	public  ArrayList<Renderable> map;
 	public RenderablePoint goal;
-	private final RRTree tree;
+	public RenderableOval goalCircle;
 
 	private final int noOfSensorsID;
 	private final int noOfCirclesID;
@@ -24,13 +25,14 @@ public class UI {
 	private final int yCoordID;
 	private final int nO_OF_SAMPLES = 7;
 	private final int nO_OF_CIRCLES = 20;
-	private final int xCOORD = 100;
-	private final int yCOORD = 100;
-	private final int bORDERSIZE = 700;
+	private int stepSize = 40;
+	private int xCoord = 100;
+	private int yCoord = 100;
+	public int bordersize = 700;
 
 	public UI()
 	{
-		gui = new EasyGui(bORDERSIZE, bORDERSIZE);
+		gui = new EasyGui(bordersize, bordersize);
 		map= new ArrayList<Renderable>();
 		noOfSensorsID = gui.addTextField(0, 0, "No of sensors");
 		xCoordID = gui.addTextField(0, 1, "xStart");
@@ -43,10 +45,8 @@ public class UI {
 
 
 		gui.addButton(4, 0, "Field Potential", this, "fieldPotentialStart");
-		gui.addButton(4, 1, "RRT", this, "fieldPotentialStart");
-		tree = new RRTree(Color.BLACK);
-
-		gui.draw(tree);
+		gui.addButton(4, 1, "RRT", this, "rRTStart");
+		
 	}
 
 	public void runDemo()
@@ -58,18 +58,14 @@ public class UI {
 	public void makeGoal(float x, float y)
 	{
 		goal = new RenderablePoint(x+400, y+400);
-		RenderableOval goalCircle = new RenderableOval((int)x+400,(int)y+400, 50, 50);
+		goalCircle = new RenderableOval((int)x+400,(int)y+400, 50, 50);
 		goalCircle.setProperties(Color.DARK_GRAY, 2.0f, false);
 		goal.setProperties(Color.CYAN, 8.0f);
 		gui.draw(goal);
 		gui.draw(goalCircle);
 	}
 	
-	private float randomDouble(double max)
-	{
-		Random random = new Random();
-		return (float) (random.nextFloat() * max);
-	}
+	
 	
 	public void makeCircles()
 	{
@@ -77,7 +73,7 @@ public class UI {
 		int circleNo = getField(noOfCirclesID,nO_OF_CIRCLES);
 		
 		for(int i = 0; i < circleNo; i++) {
-			RenderablePoint newCircle = new RenderablePoint(randomDouble(bORDERSIZE), randomDouble(bORDERSIZE));
+			RenderablePoint newCircle = new RenderablePoint(NavCalc.randomDouble(bordersize), NavCalc.randomDouble(bordersize));
 			newCircle.setProperties(Color.ORANGE, 20.0f);
 			System.out.printf("new circ at %f,%f",newCircle.x,newCircle.y);
 			map.add(newCircle);
@@ -90,23 +86,25 @@ public class UI {
 	{
 		
 		int sens = getField(noOfSensorsID,nO_OF_SAMPLES);
-		int x = getField(yCoordID,yCOORD);
-		int y = getField(xCoordID,xCOORD);
+		xCoord = getField(xCoordID,xCoord);
+		yCoord = getField(yCoordID,yCoord);
 		
-		r = new Robot(x, y, this, nO_OF_SAMPLES, 80,40, 10, true,sens);
+		r = new FieldRobot(xCoord, yCoord, this, nO_OF_SAMPLES, 80,40, stepSize, true,sens);
 	}
 	
 	public void makeRobot()
 	{
 		gui.clearGraphicsPanel();
+		map= new ArrayList<Renderable>();
 		int sens = getField(noOfSensorsID,nO_OF_SAMPLES);
-		int x = getField(yCoordID,yCOORD);
-		int y = getField(xCoordID,xCOORD);
+		yCoord= getField(yCoordID,yCoord);
+		xCoord = getField(xCoordID,xCoord);
 		
 		
-		makeGoal(x,y);
+		makeGoal(xCoord,yCoord);
 		
-		r = new Robot(x, y, this, sens, 80,40, 10, true,0);
+		r = new FieldRobot(xCoord, yCoord, this, sens, 80,40, stepSize, true,0);
+		rr = new RRTRobot(xCoord, yCoord, this, stepSize, true);
 	}
 
 	public void fieldPotentialStart()
@@ -115,7 +113,7 @@ public class UI {
 			System.out.println("No goal in place!");
 			return;
 		}
-		fieldPotential();
+		runRobot(r);
 	}
 
 	private int getField(int iD, int defaultValue) {
@@ -129,8 +127,17 @@ public class UI {
 		System.out.println(i);
 		return i;
 	}
+	
+	public void rRTStart()
+	{
+		if(goal ==null){
+			System.out.println("No goal in place!");
+			return;
+		}
+		runRobot(rr);
+	}
 
-	public void fieldPotential()
+	public void runRobot(IRobot r)
 	{
 		r.go();
 		gui.update();

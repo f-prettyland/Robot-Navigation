@@ -12,7 +12,7 @@ import maths.ObsCalc;
 import renderables.*;
 import easyGui.EasyGui;
 
-public class Robot {
+public class FieldRobot implements IRobot{
 	private static int movesPerStep = 10;
 	private double heading;
 	private double xCoord;
@@ -29,7 +29,7 @@ public class Robot {
 	private UI ui;
 	private Renderable[] self;
 
-	public Robot(float xCoord, float yCoord, UI ui, int noOfSamples,
+	public FieldRobot(float xCoord, float yCoord, UI ui, int noOfSamples,
 			int noOfSensors, double sensorRad, double sampleRad, boolean verbose, double heading) {
 		noOfMoves = 0;
 		noOfTurns = 0;
@@ -70,6 +70,22 @@ public class Robot {
 		for (Renderable obs : ui.map) {
 			Point2D closestPoint = ObsCalc.closestCrossing(hitpoint, obs, new Line2D.Double(xCoord, yCoord,hitpoint.getX(),hitpoint.getY()));
 			if(closestPoint!= null && closestPoint.distance(xCoord, yCoord)<=sensorRad){
+				
+//				((RenderablePoint) obs).setProperties(Color.GREEN, 20.0f);
+//				RenderablePolyline demo = new RenderablePolyline();
+//				demo.addPoint((int)xCoord, (int)yCoord);
+//				demo.addPoint((int)hitpoint.getX(),(int) hitpoint.getY());
+//				demo.setProperties(Color.CYAN, 1.0f);
+//				ui.gui.draw(obs);
+//				ui.gui.draw(demo);
+//				ui.gui.update();
+//				System.out.println("HERE");
+//				System.out.println("DIST IS: "+ closestPoint.distance(xCoord, yCoord));
+//				System.out.println("SENS IS: "+ sensorRad);
+//				((RenderablePoint) obs).setProperties(Color.ORANGE, 20.0f);
+//				ui.gui.draw(obs);
+//				ui.gui.unDraw(demo);
+				
 				return new HitDetails (obs,closestPoint);
 			}else if (ObsCalc.pointWithin(hitpoint, obs)) {
 				return new HitDetails (obs,hitpoint);				
@@ -88,7 +104,8 @@ public class Robot {
 				hittingHitpoints.add(hitDet);
 			}
 		}
-
+		
+		int insideDir=0;
 		TreeMap<Double, Double> directionPotentials = new TreeMap<Double, Double>();
 		for (Double possAngle : sampleOffsets) {
 			Point2D possOffset =  NavCalc.toCartesian(sampleRad, NavCalc.addToBearing(heading, possAngle));
@@ -96,23 +113,29 @@ public class Robot {
 			double potential = NavCalc.repulsionAt(sensorRad,possDir, hittingHitpoints, new Point2D.Double(xCoord, yCoord), ui.map);
 			//TODO REM
 			if(potential>0)
-				System.out.printf("Repulse poten: %.2f\n",potential);
+				output(String.format("Repulse poten: %.2f\n",potential));
+			if(potential>NavCalc.INSIDE_SCALAR)
+				insideDir++;
 			potential += NavCalc.attractionAt(possDir, ui.goal);
 			//TODO REM
-			System.out.printf("Angle: %.1f Poten: %.2f\n", possAngle, potential);
+			output(String.format("Angle: %.1f Poten: %.2f\n", possAngle, potential));
 			directionPotentials.put(potential, possAngle);
 		}
-		
-		//TODO IF ALL TOO HIGH, STOP AND TURN AND RETRY
-		
-		// if all has same potential
-		if (directionPotentials.size() == 1) {
-			//Go for close to center movement
-			turn(sampleOffsets.get(sampleOffsets.size() / 2));
-		} else {
-			turn(directionPotentials.firstEntry().getValue());
+		//if all directions all inside a cirlce
+		if(insideDir >= directionPotentials.size() ){
+			turn(180);
+		}else{
+			// if all has same potential
+			if (directionPotentials.size() == 1) {
+				//Go for close to center movement
+				turn(sampleOffsets.get(sampleOffsets.size() / 2));
+			} else{
+				turn(directionPotentials.firstEntry().getValue());
+			}
+			//paths lead inside
+			
+			move(sampleRad);
 		}
-		move(sampleRad);
 		reDraw();
 	}
 
@@ -177,10 +200,13 @@ public class Robot {
 
 	public void go() {
 		for (int i = 0; i < movesPerStep; i++) {
-			decideDir();
-			if (atGoal()) {
+			if (NavCalc.atGoal(xCoord,yCoord,ui.goalCircle)) {
+				((RenderablePolyline)self[1]).setProperties(Color.green,1.0f);
+				ui.gui.draw(self);
+				System.out.println("AT GOAL");
 				break;
 			}
+			decideDir();
 		}
 	}
 
@@ -190,10 +216,7 @@ public class Robot {
 		}
 	}
 
-	private boolean atGoal() {
-
-		return false;
-	}
+	
 
 	public int getNoOfMoves() {
 		return noOfMoves;

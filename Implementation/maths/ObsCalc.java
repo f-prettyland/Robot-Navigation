@@ -3,6 +3,7 @@ package maths;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 
+import maths.GenericCalc.EqnOfLine;
 import renderables.*;
 
 public class ObsCalc {
@@ -12,6 +13,8 @@ public class ObsCalc {
 		switch (rClass) {
 		case RenderablePoint:
 			return pointWithin(point, (RenderablePoint) shape);
+		case RenderableOval:
+			return pointWithin(point, (RenderableOval) shape);
 		default:
 			System.out.println("Shape not configured for");
 			return false;
@@ -25,28 +28,41 @@ public class ObsCalc {
 		switch (rClass) {
 		case RenderablePoint:
 			return closestCrossing(loc, (RenderablePoint) shape, line);
+		case RenderableOval:
+			return closestCrossing(loc, (RenderableOval) shape, line);
 		default:
 			System.out.println("Shape not configured for");
 			return null;
 		}
 	}
-	public static boolean doesCross(Point2D loc, Renderable shape,
+	public static boolean doesCross(Renderable shape,
 			Line2D line) {
 		RenderableClass rClass = RenderableClass.valueOf(shape.getClass()
 				.getSimpleName());
 		switch (rClass) {
 		case RenderablePoint:
-			return doesCross(loc, (RenderablePoint) shape, line);
+			return doesCross( (RenderablePoint) shape, line);
+		case RenderableOval:
+			return doesCross( (RenderableOval) shape, line);
 		default:
 			System.out.println("Shape not configured for");
 			return false;
 		}
 	}
-
+	
 	private static boolean pointWithin(Point2D point, RenderablePoint rPoint) {
 		if ((Math.pow((point.getX() - rPoint.x), 2)
 				+ Math.pow((point.getY() - rPoint.y), 2)) <= Math.pow(
-				(rPoint.penWidth / 2), 2)) {
+						(rPoint.penWidth / 2), 2)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	private static boolean pointWithin(Point2D point, RenderableOval rOval) {
+		if ((Math.pow((point.getX() - rOval.centreX), 2)/(Math.pow((rOval.width/2), 2)))
+				+ (Math.pow((point.getY() - rOval.centreY), 2)/(Math.pow((rOval.height/2), 2))) <= 1) {
 			return true;
 		} else {
 			return false;
@@ -54,7 +70,7 @@ public class ObsCalc {
 	}
 
 	/**
-	 * After ensuring the line and circle meet the intersection canbe found by
+	 * After ensuring the line and circle meet the intersection can be found by
 	 * finding the line equation, this can be combined with the equation for a
 	 * circle and can be solved overall using the quadratic equation. Once two
 	 * values are returned from this, they are compared to the location given to
@@ -67,65 +83,78 @@ public class ObsCalc {
 	 */
 	private static Point2D closestCrossing(Point2D loc, RenderablePoint rPoint,
 			Line2D line) {
-		if (line.ptLineDist(rPoint.x, rPoint.y) <= (rPoint.penWidth / 2)) {
-			EqnOfLine lineEqn = findLine(line);
-			//TODO CHECK EQN
+		if (line.ptSegDist(rPoint.x, rPoint.y) <= (rPoint.penWidth / 2)) {
+			EqnOfLine lineEqn = GenericCalc.findLine(line);
 			// quadratic eqn
 			double a = 1 + Math.pow(lineEqn.a, 2);
 			double b = (2 * lineEqn.a * lineEqn.b) - (2 * rPoint.x)
-					- (2 * rPoint.y * lineEqn.b);
-			double c = Math.pow((rPoint.penWidth / 2), 2)
-					- Math.pow((rPoint.x), 2) - Math.pow((lineEqn.b), 2)
-					+ (2 * lineEqn.a * lineEqn.b) - Math.pow(rPoint.y, 2);
+					- (2 * rPoint.y * lineEqn.a);
+			double c = Math.pow((rPoint.x), 2)
+					- Math.pow((rPoint.penWidth / 2), 2) + Math.pow((lineEqn.b), 2)
+					- (2 * rPoint.y* lineEqn.b) + Math.pow(rPoint.y, 2);
 
-			double p1 = (-1) * b / (2 * a);
-			double p2 = Math.sqrt(Math.pow(b, 2) - (4 * a * c)) / (2 * a);
-
-			double x1 = p1 + p2;
-			double x2 = p1 - p2;
-
-			double y1 = lineEqn.a * x1 + lineEqn.b;
-			double y2 = lineEqn.a * x2 + lineEqn.b;
-
-			// find which point is closest
-			if (loc.distance(x1, y1) > loc.distance(x2, y2)) {
-				return new Point2D.Double(x2, y2);
-			} else {
-				return new Point2D.Double(x1, y1);
-			}
+			return GenericCalc.quadEqnClosest(a, b, c, lineEqn, loc);
 		}
 		return null;
 	}
 	
-	private static boolean doesCross(Point2D loc, RenderablePoint rPoint,
+	private static Point2D closestCrossing(Point2D loc, RenderableOval rOval,
+			Line2D line) {
+		if (pointWithin(getClosestLinePoint(line, new Point2D.Double(rOval.centreX,rOval.centreY)), rOval)) {
+			EqnOfLine lineEqn = GenericCalc.findLine(line);
+			double hRad= rOval.height/2; 
+			double wRad= rOval.width/2; 
+			// quadratic eqn
+			double a = Math.pow(wRad, 2) + Math.pow(hRad, 2);
+			double b = (2 * lineEqn.a * lineEqn.b) - (2 *Math.pow(hRad, 2)* rOval.centreX)
+					- (2 * lineEqn.a*Math.pow(wRad, 2)* rOval.centreY);
+			double c = (Math.pow(hRad, 2)*Math.pow(rOval.centreX, 2))
+					+(Math.pow(wRad, 2)*
+							(Math.pow(lineEqn.b, 2))+(2*rOval.centreY*lineEqn.b)+Math.pow(rOval.centreY, 2))
+					-Math.pow(wRad, 2) + Math.pow(hRad, 2);;
+
+			return GenericCalc.quadEqnClosest(a, b, c, lineEqn, loc);
+		}
+		return null;
+	}
+	
+	private static boolean doesCross(RenderablePoint rPoint,
 			Line2D line) {
 		if (line.ptSegDist(rPoint.x, rPoint.y) <= (rPoint.penWidth / 2)) {
+			return true;
+		}
+		return false;
+	}
+	
+	private static boolean doesCross(RenderableOval rOval,
+			Line2D line) {
+		if (pointWithin(getClosestLinePoint(line, new Point2D.Double(rOval.centreX,rOval.centreY)), rOval)) {
 						return true;
 		}
 		return false;
 	}
 
-	private static EqnOfLine findLine(Line2D line) {
-		Point2D point = line.getP1();
-		Point2D point2 = line.getP2();
-		// gradient of the line
-		double m = (point.getY() - point2.getY())
-				/ (point.getX() - point2.getX());
-		// y intersect
-		double b = point.getY() - (m * point.getX());
+	  /**
+	   * Projects new line from original gradient 
+	 * @param line
+	 * @param point
+	 * @return
+	 */
+	public static Point2D getClosestLinePoint(Line2D line, Point2D point)
+	  {
+		//unit vector/gradient
+		double deltaX = line.getX2() - line.getX1();
+	    double deltaY = line.getY2() - line.getY1();
 
-		return new EqnOfLine(m, b);
-	}
+	    //finding lambda (when multiplied by gradient gives closest point) whilst taking into account start point
+	    double u = ((point.getX() - line.getX1()) * deltaX + (point.getY() - line.getY1()) * deltaY) / (Math.pow((deltaX), 2)+ Math.pow((deltaY), 2));
 
-	public static class EqnOfLine {
-		public EqnOfLine(double a, double b) {
-			this.a = a;
-			this.b = b;
-		}
-
-		double a;
-		double b;
-	}
+	    //multiply projected vector
+	    return new Point2D.Double((line.getX1() + u * deltaX), line.getY1() + u * deltaY);
+	  }
+	 
+	
+	
 
 	enum RenderableClass {
 		RenderableImg, RenderableObject, RenderableOval, RenderablePoint, RenderablePolygon, RenderablePolyline, RenderableRectangle, RenderableString;
