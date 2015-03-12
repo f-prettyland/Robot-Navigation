@@ -30,10 +30,22 @@ public class ObsCalc {
 			return null;
 		}
 	}
+	public static boolean doesCross(Point2D loc, Renderable shape,
+			Line2D line) {
+		RenderableClass rClass = RenderableClass.valueOf(shape.getClass()
+				.getSimpleName());
+		switch (rClass) {
+		case RenderablePoint:
+			return doesCross(loc, (RenderablePoint) shape, line);
+		default:
+			System.out.println("Shape not configured for");
+			return false;
+		}
+	}
 
 	private static boolean pointWithin(Point2D point, RenderablePoint rPoint) {
-		if (Math.pow((point.getX() - rPoint.x), 2)
-				+ Math.pow((point.getY() - rPoint.x), 2) <= Math.pow(
+		if ((Math.pow((point.getX() - rPoint.x), 2)
+				+ Math.pow((point.getY() - rPoint.y), 2)) <= Math.pow(
 				(rPoint.penWidth / 2), 2)) {
 			return true;
 		} else {
@@ -57,6 +69,7 @@ public class ObsCalc {
 			Line2D line) {
 		if (line.ptLineDist(rPoint.x, rPoint.y) <= (rPoint.penWidth / 2)) {
 			EqnOfLine lineEqn = findLine(line);
+			//TODO CHECK EQN
 			// quadratic eqn
 			double a = 1 + Math.pow(lineEqn.a, 2);
 			double b = (2 * lineEqn.a * lineEqn.b) - (2 * rPoint.x)
@@ -82,6 +95,14 @@ public class ObsCalc {
 			}
 		}
 		return null;
+	}
+	
+	private static boolean doesCross(Point2D loc, RenderablePoint rPoint,
+			Line2D line) {
+		if (line.ptSegDist(rPoint.x, rPoint.y) <= (rPoint.penWidth / 2)) {
+						return true;
+		}
+		return false;
 	}
 
 	private static EqnOfLine findLine(Line2D line) {

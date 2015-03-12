@@ -1,6 +1,7 @@
 package robot;
 
 import java.awt.Color;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.TreeMap;
@@ -12,7 +13,7 @@ import renderables.*;
 import easyGui.EasyGui;
 
 public class Robot {
-	private static int movesPerStep = 1;
+	private static int movesPerStep = 10;
 	private double heading;
 	private double xCoord;
 	private double yCoord;
@@ -29,7 +30,7 @@ public class Robot {
 	private Renderable[] self;
 
 	public Robot(float xCoord, float yCoord, UI ui, int noOfSamples,
-			int noOfSensors, double sensorRad, double sampleRad, boolean verbose) {
+			int noOfSensors, double sensorRad, double sampleRad, boolean verbose, double heading) {
 		noOfMoves = 0;
 		noOfTurns = 0;
 		this.xCoord = xCoord;
@@ -38,6 +39,7 @@ public class Robot {
 		this.sensorRad = sensorRad;
 		this.sampleRad = sampleRad;
 		this.verbose = verbose;
+		this.heading = heading;
 
 		// Calculating sensor angle offsets
 		sensorOffsets = new ArrayList<Double>();
@@ -64,34 +66,48 @@ public class Robot {
 		ui.gui.update();
 	}
 
-	private boolean checkHit(Point2D hitpoint) {
+	private HitDetails checkHit(Point2D hitpoint) {
 		for (Renderable obs : ui.map) {
-			if (ObsCalc.pointWithin(hitpoint, obs)) {
-				return true;
+			Point2D closestPoint = ObsCalc.closestCrossing(hitpoint, obs, new Line2D.Double(xCoord, yCoord,hitpoint.getX(),hitpoint.getY()));
+			if(closestPoint!= null && closestPoint.distance(xCoord, yCoord)<=sensorRad){
+				return new HitDetails (obs,closestPoint);
+			}else if (ObsCalc.pointWithin(hitpoint, obs)) {
+				return new HitDetails (obs,hitpoint);				
 			}
 		}
-		return false;
+		return null;
 	}
 
 	private void decideDir() {
-		ArrayList<Point2D> hittingHitpoints = new ArrayList<Point2D>();
+		ArrayList<HitDetails> hittingHitpoints = new ArrayList<HitDetails>();
 		for (Double sensor : sensorOffsets) {
-			Point2D potentialHit = NavCalc.toCartesian(sensorRad, sensor);
-			if (checkHit(potentialHit)) {
-				hittingHitpoints.add(potentialHit);
+			Point2D potentialHitOffset = NavCalc.toCartesian(sensorRad, NavCalc.addToBearing(heading, sensor));
+			Point2D potentialHit =  new Point2D.Double(xCoord+potentialHitOffset.getX(), yCoord+potentialHitOffset.getY());
+			HitDetails hitDet =  checkHit(potentialHit);
+			if ( hitDet!= null) {
+				hittingHitpoints.add(hitDet);
 			}
 		}
 
 		TreeMap<Double, Double> directionPotentials = new TreeMap<Double, Double>();
 		for (Double possAngle : sampleOffsets) {
-			Point2D possDir = NavCalc.toCartesian(sampleRad, possAngle);
-			double potential = NavCalc.repulsionAt(possDir, hittingHitpoints);
+			Point2D possOffset =  NavCalc.toCartesian(sampleRad, NavCalc.addToBearing(heading, possAngle));
+			Point2D possDir =  new Point2D.Double(xCoord+possOffset.getX(), yCoord+possOffset.getY());
+			double potential = NavCalc.repulsionAt(sensorRad,possDir, hittingHitpoints, new Point2D.Double(xCoord, yCoord), ui.map);
+			//TODO REM
+			if(potential>0)
+				System.out.printf("Repulse poten: %.2f\n",potential);
 			potential += NavCalc.attractionAt(possDir, ui.goal);
+			//TODO REM
+			System.out.printf("Angle: %.1f Poten: %.2f\n", possAngle, potential);
 			directionPotentials.put(potential, possAngle);
 		}
-		;
+		
+		//TODO IF ALL TOO HIGH, STOP AND TURN AND RETRY
+		
 		// if all has same potential
 		if (directionPotentials.size() == 1) {
+			//Go for close to center movement
 			turn(sampleOffsets.get(sampleOffsets.size() / 2));
 		} else {
 			turn(directionPotentials.firstEntry().getValue());
@@ -120,7 +136,7 @@ public class Robot {
 			oldSelfPath = new RenderablePolyline();
 			oldSelfPath.setProperties(Color.gray, 1.0f);
 		}
-		self = new Renderable[3];
+		self = new Renderable[5];
 		self[0] = new RenderablePoint((float) xCoord, (float) yCoord);
 		((RenderablePoint) self[0]).setProperties(Color.RED, 10.0f);
 
@@ -135,6 +151,14 @@ public class Robot {
 		headingLine.addPoint((int) (xCoord + offset.getX()),
 				(int) (yCoord + offset.getY()));
 		self[2] = headingLine;
+		
+		RenderableOval sensCircle = new RenderableOval((int)xCoord,(int) yCoord,(int) (2*sensorRad), (int) (2*sensorRad));
+		sensCircle.setProperties(Color.DARK_GRAY, 1.0f, false);
+		self[3] = sensCircle;
+		
+		RenderableOval samsCircle = new RenderableOval((int)xCoord,(int) yCoord,(int) (2*sampleRad), (int) (2*sampleRad));
+		samsCircle.setProperties(Color.LIGHT_GRAY, 1.0f, false);
+		self[4] = samsCircle;
 	}
 
 	public void turn(double angle) {
@@ -178,5 +202,7 @@ public class Robot {
 	public int getNoOfTurns() {
 		return noOfTurns;
 	}
+	
+	
 
 }

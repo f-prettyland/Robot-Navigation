@@ -5,8 +5,14 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
 import renderables.*;
+import robot.HitDetails;
 
 public  class NavCalc {
+
+	//DECREASE WITH SENSORS
+	private static final double REPULSE_SCALAR=10;
+	private static final double ATTRACT_SCALAR=0.0001;
+	private static final double INSIDE_SCALAR=Math.pow(10000000,2);
 
 	/**
 	 * Returns the cartesian offset given a vector
@@ -17,13 +23,13 @@ public  class NavCalc {
 	public static Point2D toCartesian (double magnitude, double angle){
 		//covert to radians
 		double rAngle = angle*(Math.PI/180);
-		
+
 		double x=magnitude*Math.sin(rAngle);
 		double y=magnitude*Math.cos(rAngle);
-		
+
 		return new Point2D.Double(x,y);
 	}
-	
+
 	/**
 	 * Takes in an bearing and adds an angle to it making sure that the output is still a bearing
 	 * @param base
@@ -31,25 +37,49 @@ public  class NavCalc {
 	 * @return
 	 */
 	public static double addToBearing (double base, double addition){
-		base += addition;
-		if(base >360){
-			base -=360;
-		}else if(base < 0){
-			base +=360;
+		double a = base;
+		a += addition;
+		if(a >360){
+			a -=360;
+		}else if(a < 0){
+			a +=360;
 		}
-		return base;
+		return a;
 	}
-	
+
 	//TODO DEL
 	public static Line2D findLine (Point2D point, Point2D point2){		
 		return new Line2D.Double(point, point2);
 	}
-	
-	public static double attractionAt (Point2D point, RenderablePoint from){
-		return 0;
+
+	public static double attractionAt (Point2D point, RenderablePoint from){		
+		return ATTRACT_SCALAR*(Math.pow((point.getX()-from.x),2)+Math.pow((point.getY()-from.y),2));
 	}
-	
-	public static double repulsionAt (Point2D point, ArrayList<Point2D> from){
-		return 0;
+
+	public static double repulsionAt (double s,Point2D point, ArrayList<HitDetails> from, Point2D currentLoc, ArrayList<Renderable> map){
+		double result = 0;
+		for(HitDetails hPoint : from){
+			double d= point.distance(hPoint.getHit());
+			//if planning to cross object or go into object
+
+			if(entersAnotherObs(point, currentLoc,map)){
+				result += INSIDE_SCALAR;
+			}else{
+
+			}
+			if(s>d){
+				result+=(Math.pow(Math.E,((-1)*(1/(s-d))))/d);
+			}
+		}
+		return REPULSE_SCALAR*result;
+	}
+
+	public static boolean entersAnotherObs(Point2D point, Point2D currentLoc, ArrayList<Renderable> map){
+		for(Renderable obstacle : map){
+			if(ObsCalc.pointWithin(point, obstacle)||ObsCalc.doesCross(point, obstacle, new Line2D.Double(currentLoc, point))){
+				return true;
+			}
+		}
+		return false;
 	}
 }
