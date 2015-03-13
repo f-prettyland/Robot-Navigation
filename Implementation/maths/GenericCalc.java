@@ -35,8 +35,8 @@ public class GenericCalc {
 		double x2 = p1 - p2;
 
 		double y1 = lineEqn.a * x1 + lineEqn.b;
-		double y2 = lineEqn.a * x1 + lineEqn.b;
-		if (Double.isNaN(p2)) {
+		double y2 = lineEqn.a * x2 + lineEqn.b;
+		if (!Double.isNaN(p2)) {
 			Point2D[] solns = new Point2D[2];
 			solns[0] = new Point2D.Double(x1,y1);
 			solns[1] = new Point2D.Double(x2,y2);

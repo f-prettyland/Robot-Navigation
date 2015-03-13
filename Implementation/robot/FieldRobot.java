@@ -206,6 +206,7 @@ public class FieldRobot implements IRobot{
 	public void go() {
 		for (int i = 0; i < movesPerStep; i++) {
 			if (NavCalc.atGoal(xCoord,yCoord,ui.goalCircle)) {
+				NavCalc.atGoal(xCoord,yCoord,ui.goalCircle);
 				((RenderablePolyline)self[1]).setProperties(Color.green,1.0f);
 				ui.gui.draw(self);
 				System.out.println("AT GOAL");
