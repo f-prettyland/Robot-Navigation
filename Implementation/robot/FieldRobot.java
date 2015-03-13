@@ -70,31 +70,28 @@ public class FieldRobot implements IRobot{
 		ui.gui.update();
 	}
 
-	private HitDetails checkHit(Point2D hitpoint) {
+	private HitDetails checkHit(Point2D hitpoint) {;
 		for (Renderable obs : ui.map) {
-			Point2D closestPoint = ObsCalc.closestIntersection(hitpoint, obs, new Line2D.Double(xCoord, yCoord,hitpoint.getX(),hitpoint.getY()));
+			
+			Point2D closestPoint = ObsCalc.closestIntersection(new Point2D.Double(xCoord,yCoord), obs, new Line2D.Double(xCoord, yCoord,hitpoint.getX(),hitpoint.getY()));
 			if(closestPoint!= null && closestPoint.distance(xCoord, yCoord)<=sensorRad){
-				
-				//TODO REMOVE
-//				((RenderablePoint) obs).setProperties(Color.GREEN, 20.0f);
-//				RenderablePolyline demo = new RenderablePolyline();
-//				demo.addPoint((int)xCoord, (int)yCoord);
-//				demo.addPoint((int)hitpoint.getX(),(int) hitpoint.getY());
-//				demo.setProperties(Color.CYAN, 1.0f);
-//				ui.gui.draw(obs);
-//				ui.gui.draw(demo);
-//				ui.gui.update();
-//				System.out.println("HERE");
-//				System.out.println("DIST IS: "+ closestPoint.distance(xCoord, yCoord));
-//				System.out.println("SENS IS: "+ sensorRad);
-//				((RenderablePoint) obs).setProperties(Color.ORANGE, 20.0f);
-//				ui.gui.draw(obs);
-//				ui.gui.unDraw(demo);
-				
+				RenderablePolyline obs1 = new RenderablePolyline();
+				obs1.addPoint((int)xCoord, (int)yCoord);
+				obs1.addPoint((int)closestPoint.getX(),(int) closestPoint.getY());
+				obs1.setProperties(Color.decode("0xFF6868"), 1.0f);
+				ui.gui.draw(obs1);
+				ui.gui.update();
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+				}
+				ui.gui.update();
 				return new HitDetails (obs,closestPoint);
 			}else if (ObsCalc.pointWithin(hitpoint, obs)) {
+				System.out.println("HHHHHHHHHHHHHHHHHHHHEEEEEEEEEEEEEEEYYYYYYY");
 				return new HitDetails (obs,hitpoint);				
 			}
+
 		}
 		return null;
 	}
@@ -116,17 +113,15 @@ public class FieldRobot implements IRobot{
 			Point2D possOffset =  NavCalc.toCartesian(sampleRad, NavCalc.addToBearing(heading, possAngle));
 			Point2D possDir =  new Point2D.Double(xCoord+possOffset.getX(), yCoord+possOffset.getY());
 			double potential = NavCalc.repulsionAt(sensorRad,possDir, hittingHitpoints, new Point2D.Double(xCoord, yCoord), ui.map);
-			//TODO REM
 			if(potential>0)
 				output(String.format("Repulse poten: %.2f\n",potential));
 			if(potential>NavCalc.INSIDE_SCALAR)
 				insideDir++;
 			potential += NavCalc.attractionAt(possDir, ui.goal);
-			//TODO REM
 			output(String.format("Angle: %.1f Poten: %.2f\n", possAngle, potential));
 			directionPotentials.put(potential, possAngle);
 		}
-		//if all directions all inside a cirlce
+		//if all directions all inside a circle
 		if(insideDir >= directionPotentials.size() ){
 			turn(180);
 		}else{
@@ -164,7 +159,7 @@ public class FieldRobot implements IRobot{
 			oldSelfPath = new RenderablePolyline();
 			oldSelfPath.setProperties(Color.gray, 1.0f);
 		}
-		self = new Renderable[5];
+		self = new Renderable[6];
 		self[0] = new RenderablePoint((float) xCoord, (float) yCoord);
 		((RenderablePoint) self[0]).setProperties(Color.RED, 10.0f);
 
@@ -187,6 +182,8 @@ public class FieldRobot implements IRobot{
 		RenderableOval samsCircle = new RenderableOval((int)xCoord,(int) yCoord,(int) (2*sampleRad), (int) (2*sampleRad));
 		samsCircle.setProperties(Color.LIGHT_GRAY, 1.0f, false);
 		self[4] = samsCircle;
+		
+		self[5] = new RenderablePolyline();
 	}
 
 	public void turn(double angle) {

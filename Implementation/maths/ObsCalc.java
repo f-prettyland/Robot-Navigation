@@ -8,20 +8,7 @@ import maths.GenericCalc.EqnOfLine;
 import renderables.*;
 
 public class ObsCalc {
-	public static int numberOfIntersects(Point2D point, Renderable shape) {
-		RenderableClass rClass = RenderableClass.valueOf(shape.getClass()
-				.getSimpleName());
-		switch (rClass) {
-		case RenderablePoint:
-			return numberOfIntersects(point, (RenderablePoint) shape);
-		case RenderableOval:
-			return numberOfIntersects(point, (RenderableOval) shape);
-		default:
-			System.out.println("Shape not configured for");
-			return 0;
-		}
-	}
-
+	
 	public static boolean pointWithin(Point2D point, Renderable shape) {
 		if ((numberOfIntersects(shape, new Line2D.Double(point,
 				new Point2D.Double(700, 700))) % 2) == 0) {
@@ -61,9 +48,27 @@ public class ObsCalc {
 			return doesCross((RenderablePoint) shape, line);
 		case RenderableOval:
 			return doesCross((RenderableOval) shape, line);
+		case RenderablePolygon:
+			return doesCross((RenderableOval) shape, line);
 		default:
 			System.out.println("Shape not configured for");
 			return false;
+		}
+	}
+	
+	private static Point2D[] intersectingPoints(Renderable shape, Line2D line) {
+		RenderableClass rClass = RenderableClass.valueOf(shape.getClass()
+				.getSimpleName());
+		switch (rClass) {
+		case RenderablePoint:
+			return intersectingPoints((RenderablePoint) shape, line);
+		case RenderableOval:
+			return intersectingPoints((RenderableOval) shape, line);
+		case RenderablePolygon:
+			return intersectingPoints((RenderableOval) shape, line);
+		default:
+			System.out.println("Shape not configured for");
+			return null;
 		}
 	}
 
@@ -121,6 +126,8 @@ public class ObsCalc {
 			double c = Math.pow(lineEqn.b*wRad,2) - Math.pow(hRad*wRad,2);
 
 			Point2D[] offsetInter = GenericCalc.quadEqn(a, b, c, lineEqn);
+			if(offsetInter==null)
+				return null;
 			offsetInter[0].setLocation(offsetInter[0].getX()+rOval.centreX, offsetInter[0].getY()+rOval.centreY);
 			offsetInter[1].setLocation(offsetInter[1].getX()+rOval.centreX, offsetInter[1].getY()+rOval.centreY);
 			return offsetInter;
@@ -144,19 +151,7 @@ public class ObsCalc {
 		return false;
 	}
 	
-	private static Point2D[] intersectingPoints(Renderable shape, Line2D line) {
-		RenderableClass rClass = RenderableClass.valueOf(shape.getClass()
-				.getSimpleName());
-		switch (rClass) {
-		case RenderablePoint:
-			return intersectingPoints((RenderablePoint) shape, line);
-		case RenderableOval:
-			return intersectingPoints((RenderableOval) shape, line);
-		default:
-			System.out.println("Shape not configured for");
-			return null;
-		}
-	}
+
 	/**
 	 * Projects new line from original gradient
 	 * 
@@ -181,10 +176,10 @@ public class ObsCalc {
 		} else if (dist > magnitudeOfLine) {
 			result = new Point2D.Double(line.getX2(), line.getY2());
 		} else {
-			result = new Point2D.Double((line.getX1() + dist * deltaX),
-					line.getY1() + dist * deltaY);
-
+			result = new Point2D.Double((line.getX1() + (dist * deltaX)),
+					line.getY1() + (dist * deltaY));
 		}
+		
 		return result;
 	}
 

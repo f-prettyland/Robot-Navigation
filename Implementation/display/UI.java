@@ -21,7 +21,9 @@ public class UI {
 	public RenderableOval goalCircle;
 	private TreeMap<Integer,Integer> fields;
 	private final int noOfCirclesID;
+	private final int noOfOvalsID;
 	private final int nO_OF_CIRCLES = 20;
+	private final int nO_OF_OVALS = 20;
 	public int bordersize = 700;
 
 	public UI()
@@ -32,7 +34,7 @@ public class UI {
 		fields.put(gui.addTextField(0, 1, "xStart"),100);
 		fields.put(gui.addTextField(0, 2, "yStart"),100);
 		fields.put(gui.addTextField(0, 3, "No of sample points"),7);
-		fields.put(gui.addTextField(0, 4, "No of sensors"),40);
+		fields.put(gui.addTextField(0, 4, "No of sensors"),20);
 		fields.put(gui.addTextField(0, 5, "Sensor radius"),40);
 		fields.put(gui.addTextField(0, 6, "Step size"),10);
 		fields.put(gui.addTextField(0, 7, "Verbosity: 1 or 0"),10);
@@ -41,6 +43,9 @@ public class UI {
 		
 		noOfCirclesID = gui.addTextField(3, 0, "No Of Circles");
 		gui.addButton(4, 0, "Make Circles", this, "makeCircles");
+		
+		noOfOvalsID = gui.addTextField(3, 1, "No Of Ovals");
+		gui.addButton(4, 1, "Make Ovals", this, "makeOvals");
 
 
 		gui.addButton(6, 0, "Field Potential", this, "fieldPotentialStart");
@@ -90,6 +95,20 @@ public class UI {
 	
 	
 	
+	public void makeOvals()
+	{
+		
+		int ovalNo = getField(noOfOvalsID,nO_OF_OVALS);
+		
+		for(int i = 0; i < ovalNo; i++) {
+			RenderableOval newOval = new RenderableOval((int)NavCalc.randomDouble(bordersize), (int)NavCalc.randomDouble(bordersize), 10, 20);
+			newOval.setProperties(Color.ORANGE, 1.0f,true);
+			map.add(newOval);
+			gui.draw(newOval);
+		}
+		gui.update();
+	}
+	
 	public void makeCircles()
 	{
 
@@ -98,7 +117,6 @@ public class UI {
 		for(int i = 0; i < circleNo; i++) {
 			RenderablePoint newCircle = new RenderablePoint(NavCalc.randomDouble(bordersize), NavCalc.randomDouble(bordersize));
 			newCircle.setProperties(Color.ORANGE, 20.0f);
-			System.out.printf("new circ at %f,%f",newCircle.x,newCircle.y);
 			map.add(newCircle);
 			gui.draw(newCircle);
 		}

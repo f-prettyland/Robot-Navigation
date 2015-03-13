@@ -91,10 +91,6 @@ public  class NavCalc {
 	}
 	
 	public static boolean atGoal(double x, double y, RenderableOval goalCircle) {
-		if(((450<x) && (x<550)) && ((450<y)&&(y<550)) ){
-			//TODO REM
-			System.out.println("hhe");
-		}
 		return ObsCalc.pointWithin(new Point2D.Double(x , y), goalCircle);
 	}
 	
