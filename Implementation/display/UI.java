@@ -2,6 +2,7 @@ package display;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.TreeMap;
 
 import maths.NavCalc;
 import renderables.*;
@@ -18,35 +19,57 @@ public class UI {
 	public  ArrayList<Renderable> map;
 	public RenderablePoint goal;
 	public RenderableOval goalCircle;
-
-	private final int noOfSensorsID;
+	private TreeMap<Integer,Integer> fields;
 	private final int noOfCirclesID;
-	private final int xCoordID;
-	private final int yCoordID;
-	private final int nO_OF_SAMPLES = 7;
 	private final int nO_OF_CIRCLES = 20;
-	private int stepSize = 40;
-	private int xCoord = 100;
-	private int yCoord = 100;
 	public int bordersize = 700;
 
 	public UI()
 	{
 		gui = new EasyGui(bordersize, bordersize);
 		map= new ArrayList<Renderable>();
-		noOfSensorsID = gui.addTextField(0, 0, "No of sensors");
-		xCoordID = gui.addTextField(0, 1, "xStart");
-		yCoordID = gui.addTextField(0, 2, "yStart");
-		noOfCirclesID = gui.addTextField(0, 3, "No Of Circles");
-
-		gui.addButton(1, 0, "Goal n' Robot", this, "makeRobot");
-		gui.addButton(1, 1, "Make Circles", this, "makeCircles");
-		gui.addButton(1, 2, "Remake Robot", this, "remakeRobot");
-
-
-		gui.addButton(4, 0, "Field Potential", this, "fieldPotentialStart");
-		gui.addButton(4, 1, "RRT", this, "rRTStart");
+		fields = new TreeMap<Integer,Integer>();
+		fields.put(gui.addTextField(0, 1, "xStart"),100);
+		fields.put(gui.addTextField(0, 2, "yStart"),100);
+		fields.put(gui.addTextField(0, 3, "No of sample points"),7);
+		fields.put(gui.addTextField(0, 4, "No of sensors"),40);
+		fields.put(gui.addTextField(0, 5, "Sensor radius"),40);
+		fields.put(gui.addTextField(0, 6, "Step size"),10);
+		fields.put(gui.addTextField(0, 7, "Verbosity: 1 or 0"),10);
 		
+		gui.addButton(1, 0, "Goal n' Robot", this, "makeRobot");
+		
+		noOfCirclesID = gui.addTextField(3, 0, "No Of Circles");
+		gui.addButton(4, 0, "Make Circles", this, "makeCircles");
+
+
+		gui.addButton(6, 0, "Field Potential", this, "fieldPotentialStart");
+		gui.addButton(6, 1, "RRT", this, "rRTStart");
+		
+	}
+	
+
+	public void makeRobot()
+	{
+		gui.clearGraphicsPanel();
+		map= new ArrayList<Renderable>();
+		int[] startingValues = new int[7];
+		int i =0;
+		for(int fieldID : fields.keySet()){
+			startingValues[i] = getField(fieldID,fields.get(fieldID));
+			i++;
+		}
+		
+		makeGoal(startingValues[0],startingValues[1]);
+		boolean verbose;
+		if(startingValues[6]==1){
+			verbose=true;
+		}else{
+			verbose=false;
+		}
+		
+		r = new FieldRobot(startingValues, this, verbose);
+		rr = new RRTRobot(startingValues[0], startingValues[1], this, startingValues[5], verbose);
 	}
 
 	public void runDemo()
@@ -82,30 +105,6 @@ public class UI {
 		gui.update();
 	}
 	
-	public void remakeRobot()
-	{
-		
-		int sens = getField(noOfSensorsID,nO_OF_SAMPLES);
-		xCoord = getField(xCoordID,xCoord);
-		yCoord = getField(yCoordID,yCoord);
-		
-		r = new FieldRobot(xCoord, yCoord, this, nO_OF_SAMPLES, 80,40, stepSize, true,sens);
-	}
-	
-	public void makeRobot()
-	{
-		gui.clearGraphicsPanel();
-		map= new ArrayList<Renderable>();
-		int sens = getField(noOfSensorsID,nO_OF_SAMPLES);
-		yCoord= getField(yCoordID,yCoord);
-		xCoord = getField(xCoordID,xCoord);
-		
-		
-		makeGoal(xCoord,yCoord);
-		
-		r = new FieldRobot(xCoord, yCoord, this, sens, 80,40, stepSize, true,0);
-		rr = new RRTRobot(xCoord, yCoord, this, stepSize, true);
-	}
 
 	public void fieldPotentialStart()
 	{
@@ -124,7 +123,6 @@ public class UI {
 		}catch(NumberFormatException e){
 			System.out.println("Not a number, going with default value of "+ i);
 		}
-		System.out.println(i);
 		return i;
 	}
 	

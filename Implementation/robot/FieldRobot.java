@@ -29,8 +29,12 @@ public class FieldRobot implements IRobot{
 	private UI ui;
 	private Renderable[] self;
 
-	public FieldRobot(float xCoord, float yCoord, UI ui, int noOfSamples,
-			int noOfSensors, double sensorRad, double sampleRad, boolean verbose, double heading) {
+	public FieldRobot(int[] startV, UI ui, boolean verbose){
+		this(startV[0],startV[1], ui, startV[2],startV[3],startV[4],startV[5], verbose, startV[6]);
+	}
+	
+	public FieldRobot(int xCoord, int yCoord, UI ui, int noOfSamples,
+			int noOfSensors, int sensorRad, int sampleRad, boolean verbose, int heading) {
 		noOfMoves = 0;
 		noOfTurns = 0;
 		this.xCoord = xCoord;
@@ -68,9 +72,10 @@ public class FieldRobot implements IRobot{
 
 	private HitDetails checkHit(Point2D hitpoint) {
 		for (Renderable obs : ui.map) {
-			Point2D closestPoint = ObsCalc.closestCrossing(hitpoint, obs, new Line2D.Double(xCoord, yCoord,hitpoint.getX(),hitpoint.getY()));
+			Point2D closestPoint = ObsCalc.closestIntersection(hitpoint, obs, new Line2D.Double(xCoord, yCoord,hitpoint.getX(),hitpoint.getY()));
 			if(closestPoint!= null && closestPoint.distance(xCoord, yCoord)<=sensorRad){
 				
+				//TODO REMOVE
 //				((RenderablePoint) obs).setProperties(Color.GREEN, 20.0f);
 //				RenderablePolyline demo = new RenderablePolyline();
 //				demo.addPoint((int)xCoord, (int)yCoord);
@@ -204,6 +209,7 @@ public class FieldRobot implements IRobot{
 				((RenderablePolyline)self[1]).setProperties(Color.green,1.0f);
 				ui.gui.draw(self);
 				System.out.println("AT GOAL");
+				output("In "+ noOfMoves +" moves and " + noOfTurns +" turns");
 				break;
 			}
 			decideDir();

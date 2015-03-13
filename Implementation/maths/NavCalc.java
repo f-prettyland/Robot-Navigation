@@ -41,7 +41,7 @@ public  class NavCalc {
 		double b = (2*lineEqn.b*lineEqn.a)-(2*lineEqn.a*startLoc.getY())-(2*startLoc.getX());
 		double c = Math.pow(lineEqn.b, 2) -Math.pow(unit, 2)-(2*lineEqn.b*startLoc.getY())+ Math.pow(startLoc.getY(), 2)+Math.pow(startLoc.getX(), 2) ;
 		
-		return GenericCalc.quadEqnClosest(a, b, c, lineEqn, line.getP2());
+		return GenericCalc.closestOfTwoPoints(line.getP2(),GenericCalc.quadEqn(a, b, c, lineEqn));
 	  }
 
 	/**

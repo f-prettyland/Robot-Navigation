@@ -2,10 +2,7 @@ package maths;
 
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
-import java.awt.geom.Point2D.Double;
-
-import maths.GenericCalc.EqnOfLine;
-
+import java.lang.Double;
 
 public class GenericCalc {
 	
@@ -21,9 +18,7 @@ public class GenericCalc {
 		return new EqnOfLine(m, b);
 	}
 	
-	public static Point2D quadEqnClosest(double a, double b, double c, EqnOfLine lineEqn, Point2D from){
-		Point2D[] solns = quadEqn(a,b,c, lineEqn);
-		// find which point is closest
+	public static Point2D closestOfTwoPoints(Point2D from, Point2D[] solns){
 		if (from.distance(solns[0]) > from.distance(solns[1])) {
 			return  solns[1];
 		} else {
@@ -41,10 +36,13 @@ public class GenericCalc {
 
 		double y1 = lineEqn.a * x1 + lineEqn.b;
 		double y2 = lineEqn.a * x1 + lineEqn.b;
-		Point2D[] solns = new Point2D[2];
-		solns[0] = new Point2D.Double(x1,y1);
-		solns[1] = new Point2D.Double(x2,y2);
-		return solns;
+		if (Double.isNaN(p2)) {
+			Point2D[] solns = new Point2D[2];
+			solns[0] = new Point2D.Double(x1,y1);
+			solns[1] = new Point2D.Double(x2,y2);
+			return solns;
+		}
+		return null;
 	}
 
 

@@ -23,7 +23,6 @@ public class RRTRobot implements IRobot{
 	private final RRTree tree;
 	private UI ui;
 	private int noOfMoves;
-	private Renderable[] self;
 
 	public RRTRobot(float xCoord, float yCoord, UI ui, double stepSize, boolean verbose) {
 		this.ui = ui;  
@@ -37,6 +36,14 @@ public class RRTRobot implements IRobot{
 		ui.gui.draw(tree);
 	}
 
+	private boolean possibleRoute(RRNode nearest, Point2D attemptedMove){
+		for(Renderable obstacle : ui.map){
+			if(ObsCalc.pointWithin(attemptedMove, obstacle) || ObsCalc.doesCross(obstacle, new Line2D.Double(nearest.x,nearest.y,attemptedMove.getX(),attemptedMove.getY()))){
+				return false;
+			}
+		}
+		return true;
+	}
 
 	private RRNode findNewNode() {
 		
@@ -49,20 +56,21 @@ public class RRTRobot implements IRobot{
 		
 		Point2D pointAlongLine = NavCalc.pointDownLine(vectorToRanPoint, stepSize);
 		output("new point at " + pointAlongLine.getX() +", "+ pointAlongLine.getY());
-		
-		tree.addNode(nearest, new IntPoint((int)pointAlongLine.getX(), (int)pointAlongLine.getY()));
-		
-		return tree.getNearestNeighbour(new IntPoint((int)pointAlongLine.getX(), (int)pointAlongLine.getY()));
-
-		
+		if(possibleRoute(nearest, pointAlongLine)){
+			tree.addNode(nearest, new IntPoint((int)pointAlongLine.getX(), (int)pointAlongLine.getY()));
+			return tree.getNearestNeighbour(new IntPoint((int)pointAlongLine.getX(), (int)pointAlongLine.getY()));
+		}else{
+			return null;
+		}
 	}
 
 	public void go() {
 		for (int i = 0; i < movesPerStep; i++) {
 			RRNode newNode = findNewNode();
-			if (atGoal(newNode)) {
+			if (newNode!=null && atGoal(newNode)) {
 				ui.gui.update();
 				System.out.println("AT GOAL");
+				output("In "+ noOfMoves +" moves");
 				break;
 			}
 		}
